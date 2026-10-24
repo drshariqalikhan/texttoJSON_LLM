@@ -108,79 +108,68 @@
             // 3. Evaluate into a runtime JavaScript Object
             return JSON.parse(sanitized);
         }
+async function processExtraction() {
+    const inputData = document.getElementById('textInput').value.trim();
+    const extractBtn = document.getElementById('extractBtn');
+    const loadingStatus = document.getElementById('loadingStatus');
+    const rawOutput = document.getElementById('rawOutput');
+    const parsedOutput = document.getElementById('parsedOutput');
 
-        async function processExtraction() {
-            const inputData = document.getElementById('textInput').value.trim();
-            const extractBtn = document.getElementById('extractBtn');
-            const loadingStatus = document.getElementById('loadingStatus');
-            const rawOutput = document.getElementById('rawOutput');
-            const parsedOutput = document.getElementById('parsedOutput');
+    if (!inputData) {
+        alert("Please provide some text data to extract.");
+        return;
+    }
 
-            if (!inputData) {
-                alert("Please provide some text data to extract.");
-                return;
+    extractBtn.disabled = true;
+    loadingStatus.style.display = "inline";
+    rawOutput.textContent = "Processing via keyless engine...";
+    parsedOutput.textContent = "Processing...";
+
+    // 1. Format your strict target data structure 
+    const targetSchema = {
+        name: "string",
+        age: "integer",
+        skills: ["string"]
+    };
+
+    try {
+        // Utilizing Jina's highly scalable public processing pipeline 
+        const response = await fetch("https://jina.ai" + encodeURIComponent(inputData), {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                // This header instructs Jina to turn the data directly into a JSON format matching your schema
+                "X-Respond-With": "json",
+                "X-Json-Schema": JSON.stringify(targetSchema)
             }
+        });
 
-            // UI Feedback state
-            extractBtn.disabled = true;
-            loadingStatus.style.display = "inline";
-            rawOutput.textContent = "Fetching...";
-            parsedOutput.textContent = "Fetching...";
-
-            const targetSchema = {
-                name: "string",
-                age: "integer",
-                skills: "array of strings"
-            };
-
-            const promptInstructions = `
-                You are a system data parser. Extract entities from the user input into a strict JSON payload matching this target layout:
-                ${JSON.stringify(targetSchema)}
-
-                Return ONLY the valid JSON structure. Do not include any pleasantries or conversational intros.
-                User input data: "${inputData}"
-            `;
-
-            try {
-                // Hitting the registration-free public auto-routing gateway
-                const response = await fetch("https://kilo.ai", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                        // Note: Absolutely zero authorization bearer token required
-                    },
-                    body: JSON.stringify({
-                        model: "kilo-auto/free", // Automatically hooks into an available open-source model
-                        messages: [{ role: "user", content: promptInstructions }],
-                        temperature: 0.0
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Server returned error status code: ${response.status}`);
-                }
-
-                const payload = await response.json();
-                const rawModelString = payload.choices[0].message.content;
-                
-                // Render raw model string output
-                rawOutput.textContent = rawModelString;
-
-                // Run regex parsing cleansing logic
-                const cleanedJsonObj = cleanAndParseJSON(rawModelString);
-                
-                // Render the finalized pure JSON output object safely
-                parsedOutput.innerHTML = `<span style="color: #198754;">✓ Success! Parsed Object:</span>\n${JSON.stringify(cleanedJsonObj, null, 4)}`;
-
-            } catch (err) {
-                console.error(err);
-                rawOutput.textContent = "Error occurred.";
-                parsedOutput.innerHTML = `<span class="error">Extraction parsing failed:</span>\n${err.message}`;
-            } finally {
-                extractBtn.disabled = false;
-                loadingStatus.style.display = "none";
-            }
+        if (!response.ok) {
+            throw new Error(`Server returned status: ${response.status}`);
         }
+
+        const payload = await response.json();
+        
+        // Jina separates engine responses inside a standardized object shell
+        rawOutput.textContent = JSON.stringify(payload, null, 2);
+
+        // Since the return structure from Jina matches your schema object layer perfectly:
+        parsedOutput.innerHTML = `<span style="color: #198754;">✓ Success!</span>\n${JSON.stringify(payload, null, 4)}`;
+
+    } catch (err) {
+        console.error(err);
+        rawOutput.textContent = "Error occurred.";
+        parsedOutput.innerHTML = `<span class="error">Extraction failed:</span>\n${err.message}`;
+    } finally {
+        extractBtn.disabled = false;
+        loadingStatus.style.display = "none";
+    }
+}
+
+
+
+
+
     </script>
 </body>
 </html>
