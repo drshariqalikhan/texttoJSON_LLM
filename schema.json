@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "age": { "type": "integer" },
+    "gender": { "type": "string" },
+    "home_address":{"type": "string"},
+    "work_address":{"type": "string"},
+    "skills": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["name", "age", "skills"]
+}
