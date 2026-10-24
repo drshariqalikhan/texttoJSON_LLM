@@ -1,15 +1,40 @@
 {
   "type": "object",
   "properties": {
-    "name": { "type": "string" },
-    "age": { "type": "integer" },
-    "gender": { "type": "string" },
-    "home_address":{"type": "string"},
-    "work_address":{"type": "string"},
-    "skills": {
+    "person": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "age": { "type": "integer" },
+        "gender": { "type": "string" },
+        "formalTraining": { "type": "boolean" }
+      },
+      "required": ["name", "age", "gender", "formalTraining"]
+    },
+    "locationHistory": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "string" },
+          "status": { 
+            "type": "string", 
+            "enum": ["past", "current"] 
+          },
+          "durationDescription": { "type": "string" }
+        },
+        "required": ["city", "status"]
+      }
+    },
+    "employment": {
+      "type": "object",
+      "properties": {
+        "organizationType": { "type": "string" },
+        "role": { "type": "string" },
+        "facilityOperated": { "type": "string" }
+      },
+      "required": ["organizationType", "role", "facilityOperated"]
     }
   },
-  "required": ["name", "age", "skills"]
+  "required": ["person", "locationHistory", "employment"]
 }
